@@ -1339,7 +1339,7 @@ window.BIOS_ROLEPLAY=out;
  function select(value){pane=value;apply();}
  tabs.onclick=e=>{const b=e.target.closest('[data-mobile-pane]');if(b)select(b.dataset.mobilePane);};
  const prior=render;render=function(){prior();apply();};
- document.addEventListener('click',e=>{if(!media.matches)return;const b=e.target.closest('button');if(!b)return;if(b.dataset.discuss!==undefined||b.dataset.rpOrigin||b.dataset.draft!==undefined||b.id==='decisionBtn'&&!canManage(project()))select('private');if(b.id==='publish')select('shared');});
+ document.addEventListener('click',e=>{if(!media.matches)return;const b=e.target.closest('button');if(!b)return;if(b.dataset.discuss!==undefined||b.dataset.rpOrigin||b.dataset.draft!==undefined||b.id==='decisionBtn'&&!canManage(project()))select('private');if(b.dataset.rpOrigin)requestAnimationFrame(()=>{[...document.querySelectorAll('#privateStream [data-rp-source]')].find(el=>el.dataset.rpSource===b.dataset.rpOrigin)?.scrollIntoView({block:'start'});});if(b.id==='publish')select('shared');});
  media.addEventListener('change',apply);apply();
 })();
 
