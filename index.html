@@ -18,6 +18,7 @@ nav{overflow:auto}.nav-foot{flex-shrink:0}#navProjects{max-height:48vh;overflow:
 const BIOS_ORG = (() => {
   const departments = [
     { id: 'company', name: '公司', parentId: null, leader: '方正' },
+    { id: 'executive-office', name: '总裁办', parentId: 'company', leader: '方正' },
     { id: 'marketing-center', name: '营销中心', parentId: 'company', leader: '顾宁' },
     { id: 'product-marketing', name: '产品营销与上市部', parentId: 'marketing-center', leader: '陆遥' },
     { id: 'imc', name: '整合营销项目部', parentId: 'marketing-center', leader: '乔然' },
@@ -74,7 +75,9 @@ const BIOS_ORG = (() => {
     { id:'s64', name:'方颖', deptId:'finance', role:'财务经理', identity:'员工', bio:'负责财务经理相关协作。' },
     { id:'s65', name:'秦悦', deptId:'hr', role:'人力资源负责人', identity:'部门负责人', bio:'负责人力资源负责人相关协作。' },
     { id:'s66', name:'陆青', deptId:'hr', role:'招聘经理', identity:'员工', bio:'负责招聘经理相关协作。' },
-    { id:'s01', name:'方正', deptId:'product', role:'公司负责人兼产品技术主管', identity:'公司负责人', bio:'统筹公司方向与产品技术。' },
+    { id:'s01', name:'方正', deptId:'executive-office', role:'CEO · 首席执行官', identity:'公司负责人', bio:'统筹公司方向；兼任产品与技术部负责人。可查看全公司及下级组织的使用统计。' },
+    { id:'s68', name:'沈知远', deptId:'executive-office', role:'COO · 首席运营官', identity:'公司高管', bio:'协调跨部门运营与资源，可查看全公司及下级组织的使用统计。' },
+    { id:'s69', name:'程越', deptId:'executive-office', role:'CTO · 首席技术官', identity:'公司高管', bio:'负责公司技术战略，可查看全公司及下级组织的使用统计。' },
     { id:'s02', name:'陈豪', deptId:'product', role:'产品经理', identity:'员工', bio:'梳理需求并推进产品方案。' },
     { id:'s03', name:'黄津源', deptId:'product', role:'AI应用工程师', identity:'员工', bio:'设计并实现 AI 应用原型。' },
     { id:'s04', name:'周岚', deptId:'brand', role:'品牌营销负责人', identity:'部门负责人', bio:'统筹品牌营销方向。' },
@@ -1294,6 +1297,355 @@ window.BIOS_ROLEPLAY=out;
   if(d.rpDownload){const a=artifact(d.rpKind,d.rpDownload);if(!a)return;let content=a.body||'',ext='txt',mime='text/plain';if(a.type==='table'){content='\ufeff'+[a.columns,...a.rows].map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n');ext='csv';mime='text/csv';}if(a.type==='image'){const response=await fetch(BIOS_ASSET('assets/roleplay/'+d.rpKind+'.svg'));if(!response.ok)return toast('图稿下载失败，请重试');content=await response.text();ext='svg';mime='image/svg+xml';}const url=URL.createObjectURL(new Blob([content],{type:mime+';charset=utf-8'})),link=document.createElement('a');link.href=url;link.download=a.title+'.'+ext;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
  });
  seed();render();
+})();
+
+</script><style>
+.customer-library-setting{border:1px solid var(--line);border-radius:14px;padding:18px;margin:20px 0;background:#151515}.customer-library-setting h3{margin:0 0 8px}.customer-library-setting .row{align-items:center;flex-wrap:wrap}.customer-library-entry{display:block;margin-top:14px;max-width:600px}.customer-library-setting [role=switch]{min-width:88px;white-space:nowrap}.customer-library-setting [aria-checked=true]{border-color:#b1c2ad;color:#d8eed2;background:#263224}
+
+</style><script>
+// Optional company library. The contents and access workflow are deliberately not defined yet.
+(() => {
+  const enabled = () => state.companySettings?.customerLibraryEnabled === true;
+  const mayConfigure = () => state.person === BIOS_ORG.departmentById('company').leader;
+  const base = renderMemory;
+  renderMemory = function () {
+    if (knowledgeRoute.scope === 'customer') {
+      knowledgeShell(`<div class="knowledge-breadcrumb"><a href="#/knowledge">记忆与经验</a> / 客户资料</div><div class="knowledge-heading"><small>CUSTOMER LIBRARY</small><h2>客户资料</h2><p>${enabled() ? '已启用公司客户资料入口' : '公司尚未启用客户资料'}</p></div><div class="empty"><h3>${enabled() ? '内容结构待定义' : '此入口已关闭'}</h3><p>${enabled() ? '先保留这个独立空间，客户资料的分类、字段和操作将在后续确定。' : '公司负责人可以在记忆与经验总览中开启。'}</p><a href="#/knowledge">返回记忆与经验 →</a></div>`);
+      $('#title').textContent = '客户资料';
+      return;
+    }
+    base();
+    if (knowledgeRoute.scope) return;
+    const page = document.querySelector('.knowledge-page');
+    if (!page) return;
+    const block = document.createElement('section');
+    block.className = 'customer-library-setting';
+    block.innerHTML = `<div class="row between"><div><h3>客户资料</h3><p class="scope-hint">可选的公司内容库 · ${enabled() ? '已开启' : '已关闭'}。关闭只隐藏入口，保留设置与已有资料。</p></div><button id="customerLibraryToggle" role="switch" aria-checked="${enabled()}" aria-label="启用客户资料" ${mayConfigure() ? '' : 'disabled'}>${enabled() ? '● 开启' : '○ 关闭'}</button></div>${mayConfigure() ? '' : '<small>由公司负责人配置是否启用。</small>'}${enabled() ? '<a class="knowledge-card customer-library-entry" href="#/knowledge/customer/library"><h3>客户资料 ↗</h3><p>打开独立空间；内容结构待定义。</p><span class="knowledge-open">打开客户资料 →</span></a>' : ''}`;
+    const heading = page.querySelector('.notice');
+    heading ? heading.after(block) : page.append(block);
+    $('#customerLibraryToggle').onclick = () => {
+      if (!mayConfigure()) return;
+      state.companySettings ??= {};
+      state.companySettings.customerLibraryEnabled = !enabled();
+      save(); renderMemory();
+      toast(enabled() ? '客户资料入口已开启' : '客户资料入口已隐藏，未删除内容');
+    };
+  };
+})();
+
+</script><style>
+.presence-badge{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-size:11px;font-weight:500;line-height:1.5;color:#a4aca7;vertical-align:middle}.presence-badge i{width:6px;height:6px;flex:none;border-radius:50%;background:#7d8580}.presence-badge.is-online{color:#95c9a7}.presence-badge.is-online i{background:#80c29a;box-shadow:0 0 0 2px #80c29a15}.presence-badge.is-offline{color:#a5a9ae}.presence-badge.is-offline i{background:#84888f}.contact>.row>.presence-badge{margin-left:auto}.presence-toggle{font-size:11px!important;min-height:27px;padding:4px 9px!important}.presence-person{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line,#ffffff14)}.presence-person>b{min-width:70px;font-size:13px}.presence-person .presence-toggle{margin-left:auto}.presence-members{margin-top:22px;padding-top:15px;border-top:1px solid var(--line,#ffffff14)}#presenceSelf{display:flex;align-items:center;gap:6px;margin-top:2px}#presenceSelf small{font-size:9px;color:#7f8982}.presence-waiting{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0 0;padding:10px 13px;border:1px solid #9e824e55;border-radius:9px;background:#9e824e0d;color:#cfb984;font-size:12px}.presence-waiting small{display:block;margin-top:3px;font-size:11px;color:#a79f8f;line-height:1.5}.presence-waiting button{flex:none;font-size:11px}.presence-private-hint{font-size:10px;line-height:1.6;color:#8eaa98;padding:4px 2px 7px}.presence-private-hint button{font-size:10px!important;min-height:22px;padding:1px 7px!important}.presence-offline-hint{color:#c9af7d}.presence-safety-note{font-size:11px;line-height:1.7;color:#b0a286;margin-top:15px}button[aria-disabled=true]{opacity:.5;cursor:not-allowed}@media(max-width:760px){.presence-waiting{align-items:flex-start;padding:8px 10px;gap:7px}.presence-waiting b{font-size:11px}.presence-waiting small{font-size:10px}.presence-waiting button{white-space:normal;max-width:83px;padding:5px 7px}.presence-person{gap:8px}.presence-person>b{min-width:65px}.presence-private-hint{padding:4px 0}#presenceSelf{flex-wrap:wrap}.meta .presence-badge{font-size:10px}}
+.presence-waiting-tag{background:#9e824e19!important;border-color:#9e824e55!important;color:#cfb984!important}
+
+</style><script>
+// Local, explicit presence simulation. Does not infer presence from old messages.
+const BIOS_PRESENCE = (() => {
+  const defaultOffline = ['陈豪', '唐睿', '陆青', '叶青', '苏禾', '沈航'];
+  const names = org => new Set((org.staff || []).map(p => p.name));
+  function initialize(state, org) {
+    const prior = state.employeePresence && typeof state.employeePresence === 'object' ? state.employeePresence : {};
+    state.employeePresence = Object.fromEntries([...names(org)].map(name => [name,
+      prior[name] === 'offline' || prior[name] === 'online' ? prior[name] : defaultOffline.includes(name) ? 'offline' : 'online']));
+    return state.employeePresence;
+  }
+  const online = (state, name) => state.employeePresence?.[name] !== 'offline';
+  function participants(project, org) {
+    const known = names(org);
+    return [...new Set([...(project?.members || []), project?.owner, project?.manager].filter(n => known.has(n)))];
+  }
+  function check(state, project, actor, org, options = {}) {
+    const known = names(org);
+    if (!known.has(actor) || !online(state, actor)) return {allowed:false, offline:[actor], reason:'当前员工离线：' + actor + '。请先模拟上线后再操作。'};
+    if (options.private || options.acceptInvitation || options.safety) return {allowed:true, offline:[], reason:''};
+    const projects = [project, ...(options.also || [])].filter(Boolean);
+    const offline = [...new Set(projects.flatMap(p => participants(p, org)))].filter(n => !online(state, n));
+    return {allowed:!offline.length, offline, reason:offline.length ? '等待员工上线：' + offline.join('、') : ''};
+  }
+  function set(state, name, value, org) {
+    if (!names(org).has(name) || !['online', 'offline'].includes(value)) return false;
+    state.employeePresence ??= {};
+    state.employeePresence[name] = value;
+    return true;
+  }
+  return {defaultOffline, initialize, online, participants, check, set};
+})();
+if (typeof module !== 'undefined') module.exports = BIOS_PRESENCE;
+
+</script><script>
+// Additive local simulation; history, project status and private records are preserved.
+(() => {
+  'use strict';
+  const model = BIOS_PRESENCE;
+  model.initialize(state, BIOS_ORG); save();
+  const known = new Set(BIOS_ORG.staff.map(s => s.name));
+  const badge = name => known.has(name) ? `<span class="presence-badge ${model.online(state,name)?'is-online':'is-offline'}" data-presence-badge="${esc(name)}"><i></i>${model.online(state,name)?'在线':'离线'}</span>` : '';
+  const toggle = name => `<button type="button" class="presence-toggle" data-presence-toggle="${esc(name)}" aria-label="模拟${name}${model.online(state,name)?'离线':'上线'}">模拟${model.online(state,name)?'离线':'上线'}</button>`;
+  const check = (p=project(), options={}) => model.check(state,p,state.person,BIOS_ORG,options);
+  function requireOnline(p, actor, options={}) {
+    const result=model.check(state,p,actor,BIOS_ORG,options);
+    if (!result.allowed) throw Error(result.reason);
+  }
+  function block(result) { if(result.allowed)return false;toast(result.reason);return true; }
+  function rows(list) { return list.map(name=>`<div class="presence-person"><b>${esc(name)}${name===state.person?'（我）':''}</b>${badge(name)}${toggle(name)}</div>`).join(''); }
+  function openPresence() {
+    const p=project(), list=model.participants(p,BIOS_ORG);
+    openModal(`<div class="modal-title"><h2>员工在线状态 · 演示</h2><button data-close>关闭</button></div><p class="scope-hint">这里只模拟当前浏览器的在线状态，未连接员工设备。离线员工的 AI 不会自行推进、托管或代替本人确认。历史记录继续可读。</p><div data-presence-manager>${rows([...new Set([state.person,...list])])}</div><p class="scope-hint">共同操作需要本项目参与员工、发起人与负责人在线。在线员工可继续私人准备；在线负责人仍可暂停或终止任务。</p>`);
+  }
+  function decorateMessages(root=document) {
+    root.querySelectorAll('.meta').forEach(meta=>{
+      meta.querySelectorAll('.presence-badge').forEach(el=>el.remove());
+      const label=meta.querySelector('b')?.textContent||'';
+      const name=meta.dataset.avatarName||[...known].find(n=>label===n||label.startsWith(n+'的 AI')||label.startsWith(n+' ·'));
+      if(known.has(name))meta.insertAdjacentHTML('beforeend',badge(name));
+    });
+  }
+  function decorateOrg() {
+    document.querySelectorAll('#orgResults .contact').forEach(card=>{
+      card.querySelectorAll('.presence-badge,.presence-toggle').forEach(el=>el.remove());
+      const label=card.querySelector('b')?.textContent.replace('（我）','').trim();
+      if(!known.has(label))return;
+      card.querySelector('.row')?.insertAdjacentHTML('beforeend',badge(label));
+      card.querySelector('.toolbar')?.insertAdjacentHTML('beforeend',toggle(label));
+    });
+  }
+  function refresh() {
+    document.querySelectorAll('[data-presence-badge]').forEach(el=>el.outerHTML=badge(el.dataset.presenceBadge));
+    document.querySelectorAll('#presenceWaiting,#presenceSelf,#presencePrivateHint').forEach(el=>el.remove());
+    const navUser=$('#navUser');
+    if(navUser)navUser.insertAdjacentHTML('afterend',`<span id="presenceSelf">${badge(state.person)}<small>本地演示</small></span>`);
+    decorateOrg(); decorateMessages();
+    // A different view must never inherit the previous project's waiting banner.
+    if(view!=='work'||!$('#composer'))return;
+    const p=project(), result=check(), self=check(p,{private:true});
+    const statusTag=$('.shared .pane-head .tag');
+    if(statusTag&&isCollab(p)){
+      const effective=BIOS_FLOW.effective(state,p);
+      statusTag.textContent=result.allowed?statusText(effective.status):'等待上线';
+      statusTag.className='tag '+(result.allowed?'status-'+effective.status:'presence-waiting-tag');
+      statusTag.title=result.reason;
+    }
+    if(isCollab(p)&&!result.allowed){
+      const host=$('#taskContext')||$('.workspace')||$('#content');
+      host.insertAdjacentHTML('beforeend',`<div id="presenceWaiting" class="presence-waiting" role="status"><div><b>${esc(result.reason)}</b><small>协作等待本人在线确认；私人准备仅对在线的当前员工开放。历史记录可继续查看。</small></div><button type="button" data-presence-manage>管理在线模拟</button></div>`);
+    }
+    $('#composer').insertAdjacentHTML('beforebegin',`<div id="presencePrivateHint" class="presence-private-hint ${self.allowed?'':'presence-offline-hint'}">${self.allowed?(isCollab(p)&&!result.allowed?'你在线，可先私下准备；共享操作等待所有参与员工上线。':'当前员工在线 · 本地模拟'):esc(self.reason)} <button type="button" data-presence-manage>在线模拟</button></div>`);
+    $('#send')?.setAttribute('aria-disabled',String(!self.allowed));
+    $('#publish')?.setAttribute('aria-disabled',String(!result.allowed));
+    if($('#publish'))$('#publish').title=result.reason;
+    document.querySelectorAll('[data-h-child],[data-h-report]').forEach(b=>{b.setAttribute('aria-disabled',String(!result.allowed));b.title=result.reason;});
+  }
+  function setPresence(name,value) {
+    if(!model.set(state,name,value,BIOS_ORG))return;
+    save(); refresh();
+    const manager=document.querySelector('[data-presence-manager]');
+    if(manager)manager.innerHTML=rows([...new Set([state.person,...model.participants(project(),BIOS_ORG)])]);
+    const members=document.querySelector('[data-presence-members]');
+    if(members)members.innerHTML=rows(model.participants(project(),BIOS_ORG));
+    toast(name+'已模拟'+(value==='online'?'上线':'离线')+'；原有记录保留');
+  }
+  // Wrappers protect programmatic callers as well as the visible controls.
+  const oldSend=send;send=function(...args){if(block(check(project(),{private:true})))return;return oldSend.apply(this,args);};
+  const oldPublish=publish;publish=function(...args){if(block(check()))return;return oldPublish.apply(this,args);};
+  const oldCreate=BIOS_FLOW.create;BIOS_FLOW.create=function(s,args,actor,...rest){requireOnline(args.parentId?BIOS_FLOW.find(s,args.parentId):null,actor,{private:!args.parentId});return oldCreate.call(this,s,args,actor,...rest);};
+  const oldDecision=BIOS_FLOW.changeDecision;BIOS_FLOW.changeDecision=function(s,p,actor,action,...rest){requireOnline(p,actor,{safety:['paused','stopped'].includes(action)});return oldDecision.call(this,s,p,actor,action,...rest);};
+  const oldSubmit=BIOS_FLOW.submitReport;BIOS_FLOW.submitReport=function(s,p,actor,...rest){requireOnline(p,actor,{also:[BIOS_FLOW.find(s,p.parentId)]});return oldSubmit.call(this,s,p,actor,...rest);};
+  const oldReview=BIOS_FLOW.reviewReport;BIOS_FLOW.reviewReport=function(s,id,actor,...rest){const r=(s.reports||[]).find(r=>r.id===id);requireOnline(BIOS_FLOW.find(s,r?.parentId),actor);return oldReview.call(this,s,id,actor,...rest);};
+  for(const key of ['confirmManager','declineDepartment','retryDepartment']){
+    const base=BIOS_FLOW[key];BIOS_FLOW[key]=function(p,...args){requireOnline(p,args[args.length-1],{acceptInvitation:true});return base.call(this,p,...args);};
+  }
+  const oldConfirm=BIOS_FLOW.confirmDepartment;BIOS_FLOW.confirmDepartment=function(s,p,id,rep,actor){requireOnline(p,actor,{acceptInvitation:true});return oldConfirm.call(this,s,p,id,rep,actor);};
+  const oldMembers=membersModal;membersModal=function(...args){const result=oldMembers.apply(this,args);$('#modal').insertAdjacentHTML('beforeend',`<section class="presence-members"><h3>员工在线状态 · 本地演示</h3><p class="scope-hint">模拟上线后可恢复共同操作；不会重写已确认记录。邀请承接由在线的本人处理，不要求其他人先上线。</p><div data-presence-members>${rows(model.participants(project(),BIOS_ORG))}</div></section>`);return result;};
+  const oldDecisionModal=decisionModal;decisionModal=function(...args){const result=oldDecisionModal.apply(this,args);if($('#confirmDecision'))$('#modal').insertAdjacentHTML('beforeend','<p class="presence-safety-note">在线负责人可在其他人离线时暂停或终止任务，防止继续推进；调整方向与恢复需本项目员工全部在线。</p>');return result;};
+  const oldMessages=renderMessages;renderMessages=function(...args){const result=oldMessages.apply(this,args);refresh();return result;};
+  const oldOrgResults=renderOrgResults;renderOrgResults=function(...args){const result=oldOrgResults.apply(this,args);decorateOrg();return result;};
+  const oldContext=renderTaskContext;renderTaskContext=function(...args){const result=oldContext.apply(this,args);refresh();return result;};
+  const oldRender=render;render=function(...args){const result=oldRender.apply(this,args);refresh();return result;};
+  const oldModal=openModal;openModal=function(...args){const result=oldModal.apply(this,args);decorateMessages($('#modal'));return result;};
+  // Capture phase runs before legacy onclick handlers and delegated listeners.
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;
+    if(b.hasAttribute('data-presence-manage')){e.preventDefault();e.stopImmediatePropagation();openPresence();return;}
+    if(b.dataset.presenceToggle){e.preventDefault();e.stopImmediatePropagation();const n=b.dataset.presenceToggle;setPresence(n,model.online(state,n)?'offline':'online');return;}
+    let options=null,p=project();const d=b.dataset;
+    if(['send','oasisGenerate','draftReport'].includes(b.id))options={private:true};
+    if(['publish','confirmReply','hInviteConfirm','invite'].includes(b.id)||d.hReview||d.hChild!==undefined||d.hRetry)options={};
+    if(b.id==='confirmDecision')options={safety:['paused','stopped'].includes($('#decisionType')?.value)};
+    if(b.id==='submitReport')options={also:[BIOS_FLOW.find(state,p.parentId)]};
+    // The preview's scope is captured by oasis.js when generated. Its select
+    // may subsequently change, so gate the actual preview action's label.
+    if(b.id==='oasisInsert')options={private:!b.textContent.includes('确认发布')};
+    if(d.hManager!==undefined||d.hConfirmdept||b.id==='declineConfirm')options={acceptInvitation:true};
+    if(b.id==='createProject')options={private:!document.querySelector('#modal .notice')?.textContent.startsWith('上级：')};
+    if(options&&block(check(p,options))){e.preventDefault();e.stopImmediatePropagation();}
+  },true);
+  window.BIOS_PRESENCE_UI={check,refresh,open:openPresence,set:setPresence,badge};
+  render();
+})();
+
+</script><style>
+.org-board-content{min-height:0;overflow:hidden;background:#0b0b0d}.ob-page{padding:30px 32px 48px!important;max-width:1440px;margin:0 auto;height:100%;width:100%;overflow:auto;color:#f4f4f5}.ob-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px}.ob-heading h2{font-size:28px;font-weight:580;letter-spacing:-.7px;margin:7px 0 8px}.ob-heading p{margin:0;color:#aaaab3;font-size:13px}.ob-heading small{letter-spacing:1.7px;font-size:10px}.ob-simulation{white-space:nowrap;color:#c4c4cd;border:1px solid #484850;border-radius:24px;padding:7px 11px;font-size:11px}.ob-notice{font-size:12px;line-height:1.8;color:#b3b3be;background:#17171b;border:1px solid #33333b;border-radius:12px;padding:14px 17px}.ob-notice b{display:block;font-weight:500;color:#e4e4eb;margin-bottom:3px}.ob-access{display:flex;align-items:center;gap:11px;margin:22px 0}.ob-access b{font-size:13px}.ob-access small{display:block;line-height:1.8;margin-top:2px}.ob-tabs{display:flex;gap:22px;border-bottom:1px solid #343439;margin-bottom:23px}.ob-tabs button{padding:11px 0 13px;border:0;border-bottom:2px solid transparent;background:transparent;border-radius:0;color:#a6a6b0;font-size:13px}.ob-tabs button[aria-selected=true]{border-bottom-color:#e4e4ee;color:#fff}.ob-breadcrumbs{display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;gap:7px;background:transparent;border:0;padding:0;margin:0 0 20px;min-width:0}.ob-breadcrumbs button{border:0;background:transparent;padding:4px 5px;color:#a8a8b4;font-size:12px}.ob-breadcrumbs button[aria-current=page]{color:#fff}.ob-breadcrumbs span{color:#6e6e7c}.ob-section-title{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:15px}.ob-section-title h3{font-size:16px;font-weight:550;margin:0}.ob-section-title p{font-size:11px;color:#aaaab3;margin:6px 0 0;line-height:1.7}.ob-section-title>small{white-space:nowrap}.ob-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 28px}.ob-metric{border:1px solid #343439;border-radius:13px;background:#151518;padding:19px 19px 16px;min-width:0}.ob-metric small{display:block;font-size:12px}.ob-metric strong{display:block;font-size:29px;font-weight:550;letter-spacing:-.5px;margin:10px 0}.ob-metric span{color:#8f8f9c;font-size:10px;line-height:1.7}.ob-section{margin-bottom:27px}.ob-table-scroll{width:100%;overflow-x:auto;border:1px solid #343439;border-radius:12px;background:#121215;overscroll-behavior-x:contain}.ob-table{border-collapse:collapse;width:100%;min-width:830px;text-align:left;font-size:12px;font-variant-numeric:tabular-nums}.ob-table th,.ob-table td{padding:15px 17px;border-bottom:1px solid #2d2d33;vertical-align:middle;white-space:nowrap}.ob-table thead th{font-weight:450;color:#aaaab7;background:#19191d;font-size:11px}.ob-table tbody th{font-weight:450;min-width:170px}.ob-table tbody th small{display:block;font-size:10px;margin-top:6px;max-width:230px;white-space:normal;line-height:1.6}.ob-table tbody th b{font-weight:500}.ob-table tbody tr:last-child>*{border-bottom:0}.ob-table tbody tr:hover{background:#19191d}.ob-dept-link{padding:0;border:0;background:transparent!important;border-radius:0;font-size:12px;text-align:left;color:#f0f0f5;white-space:normal;line-height:1.7}.ob-dept-link span{color:#a9a9b4;margin-left:9px}.ob-status{font-size:10px;color:#8f8f9c;border:1px solid #38383f;border-radius:20px;padding:4px 7px}.ob-status.is-active{color:#c5dfc8;border-color:#3c5140;background:#1b2920}.ob-empty,.ob-self-notice{font-size:12px;line-height:1.8;padding:15px 17px;border:1px solid #343439;border-radius:10px;color:#aaaab3;background:#151518}.ob-self-notice{margin-bottom:22px}.ob-definitions{color:#8f8f9c;font-size:11px;line-height:1.9;border-top:1px solid #343439;padding-top:19px}.ob-definitions summary{cursor:pointer;color:#aaaab3}.ob-definitions p{max-width:1000px}.ob-page button:focus-visible{outline:2px solid #9caede;outline-offset:3px}
+.ob-period{display:flex;align-items:center;gap:7px;margin:0 0 22px}.ob-period span{font-size:11px;color:#aaaab3;margin-right:4px}.ob-period button{font-size:11px;padding:7px 11px}.ob-period button[aria-pressed=true]{background:#eeeeF2;color:#151518;border-color:#eeeeF2}
+@media(min-width:1500px){.ob-metrics{grid-template-columns:repeat(6,minmax(0,1fr))}.ob-metric{padding:17px 15px}}@media(max-width:1050px){.ob-page{padding:24px 22px 35px!important}.ob-metrics{gap:9px}.ob-metric{padding:15px}.ob-metric strong{font-size:27px}}@media(max-width:600px){.ob-page{padding:20px 14px 30px!important}.ob-heading{display:block;margin-bottom:18px}.ob-heading h2{font-size:24px}.ob-simulation{display:inline-block;margin-top:13px}.ob-notice{padding:12px;font-size:11px}.ob-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.ob-metric{padding:13px 12px}.ob-metric strong{font-size:25px;margin:9px 0}.ob-metric small{font-size:11px}.ob-metric span{font-size:9px}.ob-section-title{align-items:flex-start}.ob-section-title>small{font-size:10px}.ob-section-title h3{font-size:14px}.ob-breadcrumbs{gap:3px}.ob-access small{font-size:10px}.ob-tabs{margin-bottom:18px}.ob-table th,.ob-table td{padding:13px}.ob-table-scroll{border-radius:9px}}
+
+</style><script>
+/* Fixed synthetic telemetry. This prototype never reads chats or infers employee performance. */
+(function (root, factory) {
+  const model = factory();
+  if (typeof module === 'object' && module.exports) module.exports = model;
+  else root.BIOS_ORG_INSIGHTS = model;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+  function descendants(org, id) {
+    const result = new Set(), pending = [id];
+    while (pending.length) {
+      const current = pending.pop();
+      if (result.has(current) || !org.departments.some(d => d.id === current)) continue;
+      result.add(current);
+      org.departments.filter(d => d.parentId === current).forEach(d => pending.push(d.id));
+    }
+    return result;
+  }
+  function access(org, name) {
+    const person = org.staff.find(s => s.name === name);
+    if (!person) return {kind:'none', departmentIds:[], staffIds:[], roots:[]};
+    const executive = person.deptId === 'executive-office';
+    const led = org.departments.filter(d => d.leader === name);
+    const departmentIds = executive ? org.departments.map(d => d.id) : [...new Set(led.flatMap(d => [...descendants(org, d.id)]))];
+    const allowed = new Set(departmentIds);
+    const roots = departmentIds.filter(id => !allowed.has(org.departments.find(d => d.id === id)?.parentId));
+    return {kind:executive?'company':led.length?'departments':'self', departmentIds, roots,
+      staffIds:executive || led.length ? [...new Set(org.staff.filter(s => allowed.has(s.deptId)).map(s => s.id))] : [person.id]};
+  }
+  function hash(text) {
+    let n = 0;
+    for (const c of String(text)) n = (Math.imul(n, 31) + c.charCodeAt(0)) >>> 0;
+    return n;
+  }
+  function fixture(org) {
+    return Object.fromEntries(org.staff.map(s => {
+      const n = hash(s.id), inactive = n % 9 === 0;
+      const row = {projects:Array.from({length:inactive?0:n%4}, (_, i) => 'project-' + s.id + '-' + i),
+        collaborations:Array.from({length:inactive?0:1+n%3}, (_, i) => 'collaboration-' + (n+i)%11),
+        humanMessages:Array.from({length:inactive?0:1+n%17}, (_, i) => 'human-' + s.id + '-' + i),
+        confirmedOutputs:Array.from({length:inactive?0:n%6}, (_, i) => 'confirmed-' + s.id + '-' + i)};
+      // Shared event IDs have one date everywhere. Activity follows dated events,
+      // so an employee cannot have messages or outputs on an inactive day.
+      const activeDays = [...new Set(Object.values(row).flat().map(eventDay))].sort((a,b) => a-b);
+      return [s.id, {activeDays, ...row}];
+    }));
+  }
+  function eventDay(id) { return hash(id) % 7 + 1; }
+  function periodRecords(records, period = 'week') {
+    if (period !== 'today') return records;
+    return Object.fromEntries(Object.entries(records).map(([id, row]) => [id, {
+      activeDays:(row.activeDays || []).filter(day => day === 7),
+      ...Object.fromEntries(['projects','collaborations','humanMessages','confirmedOutputs'].map(key =>
+        [key, (row[key] || []).filter(eventId => eventDay(eventId) === 7)]))
+    }]));
+  }
+  function aggregate(records, ids, period = 'week') {
+    const filtered = periodRecords(records, period), distinctIds = [...new Set(ids)];
+    const selected = distinctIds.map(id => filtered[id]).filter(Boolean);
+    const unique = key => new Set(selected.flatMap(r => r[key] || []));
+    return {employees:selected.length, activeEmployees:selected.filter(r => (r.activeDays || []).length > 0).length,
+      activeToday:selected.filter(r => (r.activeDays || []).includes(7)).length,
+      activeDays:new Set(distinctIds.flatMap(id => records[id]?.activeDays || [])).size,
+      projects:unique('projects').size, collaborations:unique('collaborations').size,
+      humanMessages:unique('humanMessages').size, confirmedOutputs:unique('confirmedOutputs').size};
+  }
+  function visibleStaff(org, scope, departmentId) {
+    const allowed = new Set(scope.staffIds), branch = departmentId ? descendants(org, departmentId) : null;
+    if (departmentId && !scope.departmentIds.includes(departmentId)) return [];
+    return org.staff.filter(s => allowed.has(s.id) && (!branch || branch.has(s.deptId)));
+  }
+  function selection(scope, departmentId) {
+    return scope.departmentIds.includes(departmentId) ? departmentId : scope.roots.length === 1 ? scope.roots[0] : null;
+  }
+  return {descendants, access, fixture, eventDay, periodRecords, aggregate, visibleStaff, selection};
+});
+
+if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
+  'use strict';
+  const model = window.BIOS_ORG_INSIGHTS, records = model.fixture(BIOS_ORG);
+  let tab = 'organization', selectedDepartment = null, period = 'today';
+  const department = id => BIOS_ORG.departments.find(d => d.id === id);
+  const getScope = () => model.access(BIOS_ORG, state.person);
+  const periodLabel = () => period === 'today' ? '模拟今日' : '近7天';
+  const metrics = staff => model.aggregate(records, staff.map(s => s.id), period);
+  const activityRate = m => m.employees ? Math.round(m.activeEmployees / m.employees * 100) + '%' : '0%';
+  const metricCells = m => `<td>${m.activeEmployees}</td><td>${activityRate(m)}</td><td>${m.projects}</td><td>${m.collaborations}</td><td>${m.humanMessages}</td><td>${m.confirmedOutputs}</td>`;
+  const headers = () => `<th scope="col">${periodLabel()}活跃员工</th><th scope="col">活跃员工占比</th><th scope="col">新增项目</th><th scope="col">不同协作</th><th scope="col">人类消息</th><th scope="col">确认共享成果</th>`;
+  function openBoard() {
+    view = 'orgBoard'; drawer = false; render(); window.BIOS_LAYOUT?.closeMobile();
+  }
+  let navButton = document.getElementById('orgBoardBtn');
+  if (!navButton) {
+    navButton = document.createElement('button'); navButton.type = 'button'; navButton.id = 'orgBoardBtn';
+    navButton.className = 'nav-item'; navButton.textContent = '▤　组织看板';
+    document.getElementById('orgBtn').after(navButton);
+  }
+  navButton.onclick = openBoard;
+  const priorNav = nav;
+  nav = function () { priorNav(); navButton.classList.toggle('active', view === 'orgBoard'); };
+  const priorOrg = renderOrg;
+  renderOrg = function () {
+    priorOrg();
+    const heading = document.querySelector('.org-heading .toolbar') || document.querySelector('#content .page-inner');
+    if (heading && !document.querySelector('[data-org-board-entry]')) {
+      const button = document.createElement('button'); button.type = 'button'; button.dataset.orgBoardEntry = '';
+      button.textContent = '▤ 组织看板'; heading.append(button);
+    }
+  };
+  function crumbs(scope) {
+    const trail = [], seen = new Set();
+    let d = department(selectedDepartment);
+    while (d && scope.departmentIds.includes(d.id) && !seen.has(d.id)) {
+      seen.add(d.id); trail.unshift(d); d = department(d.parentId);
+    }
+    return `<div class="ob-breadcrumbs" role="navigation" aria-label="看板部门路径"><button data-ob-dept="">${scope.kind === 'company' ? '全公司' : '我的管理范围'}</button>${trail.map(d => `<span aria-hidden="true">/</span><button data-ob-dept="${esc(d.id)}" ${d.id===selectedDepartment?'aria-current="page"':''}>${esc(d.name)}</button>`).join('')}</div>`;
+  }
+  function employeeTable(staff) {
+    return `<div class="ob-table-scroll" tabindex="0" role="region" aria-label="员工模拟指标，可横向滚动"><table class="ob-table"><thead><tr><th scope="col">员工 / 岗位</th><th scope="col">部门</th><th scope="col">活跃天数 / 7</th><th scope="col">${periodLabel()}活跃</th><th scope="col">新增项目</th><th scope="col">不同协作</th><th scope="col">人类消息</th><th scope="col">确认共享成果</th></tr></thead><tbody>${staff.map(s=>{const m=metrics([s]);return `<tr><th scope="row"><b>${esc(s.name)}${s.name===state.person?'（我）':''}</b><small>${esc(s.role)}</small></th><td>${esc(department(s.deptId)?.name)}</td><td>${m.activeDays} / 7</td><td><span class="ob-status ${m.activeEmployees?'is-active':''}">${m.activeEmployees?'活跃':'未活跃'}</span></td><td>${m.projects}</td><td>${m.collaborations}</td><td>${m.humanMessages}</td><td>${m.confirmedOutputs}</td></tr>`;}).join('') || '<tr><td colspan="8">本范围暂无员工。</td></tr>'}</tbody></table></div>`;
+  }
+  function organizationTable(scope) {
+    const children = BIOS_ORG.departments.filter(d => scope.departmentIds.includes(d.id) && (selectedDepartment ? d.parentId === selectedDepartment : scope.roots.includes(d.id)));
+    const direct = model.visibleStaff(BIOS_ORG, scope, selectedDepartment).filter(s => s.deptId === selectedDepartment);
+    return `<section class="ob-section"><div class="ob-section-title"><div><h3>下属部门</h3><p>逐级进入部门，查看包含其下属团队的去重汇总。</p></div><small>${children.length} 个直属部门</small></div>${children.length?`<div class="ob-table-scroll" tabindex="0" role="region" aria-label="部门模拟指标，可横向滚动"><table class="ob-table"><thead><tr><th scope="col">部门 / 负责人</th><th scope="col">范围人数</th>${headers()}</tr></thead><tbody>${children.map(d=>{const m=metrics(model.visibleStaff(BIOS_ORG,scope,d.id));return `<tr><th scope="row"><button class="ob-dept-link" data-ob-dept="${esc(d.id)}">${esc(d.name)} <span aria-hidden="true">↗</span></button><small>负责人 ${esc(d.leader)}</small></th><td>${m.employees}</td>${metricCells(m)}</tr>`;}).join('')}</tbody></table></div>`:'<div class="ob-empty">已到最末级部门，可在下方查看直属员工。</div>'}</section>${selectedDepartment?`<section class="ob-section"><div class="ob-section-title"><div><h3>直属员工</h3><p>本部门直属成员；下属部门成员在上方继续下钻。</p></div><small>${direct.length} 人</small></div>${employeeTable(direct)}</section>`:''}`;
+  }
+  function renderBoard() {
+    const scope = getScope(); selectedDepartment = model.selection(scope, selectedDepartment);
+    const staff = model.visibleStaff(BIOS_ORG, scope, selectedDepartment), m = metrics(staff);
+    const selectedName = scope.kind === 'self' ? '我的使用概览' : selectedDepartment ? department(selectedDepartment)?.name : '我的管理范围';
+    const accessText = scope.kind === 'company' ? '高管办公室 · 可查看全公司汇总与员工指标' : scope.kind === 'departments' ? '部门负责人 · 仅可查看本人负责部门及其下属团队' : '员工 · 仅可查看本人指标';
+    document.querySelector('#taskContext')?.remove(); document.querySelector('#demoDock')?.remove();
+    $('#title').textContent = '组织看板'; $('#subtitle').textContent = '固定模拟数据 · 按当前演示身份展示可见范围';
+    const content = $('#content'); content.className = 'panels solo org-board-content'; content.removeAttribute('style');
+    content.innerHTML = `<div class="page-scroll ob-page"><div class="ob-heading"><div><small>ORGANIZATION INSIGHTS</small><h2>组织看板</h2><p>了解 BIOS 的使用情况与协作参与。</p></div><span class="ob-simulation">模拟数据 · 静态样例</span></div><div class="ob-notice"><b>固定样例周 · 共 7 天，第 7 天为“模拟今日”。</b>所有数字均由确定性演示数据生成，不反映实际使用或员工绩效。只展示计数，不展示私人聊天或消息内容。</div><div class="ob-access"><span class="avatar">${esc(state.person[0])}</span><div><b>${esc(state.person)}</b><small>${esc(accessText)}</small></div></div><div class="ob-tabs" role="tablist" aria-label="组织看板视图"><button type="button" id="ob-organization-tab" role="tab" aria-selected="${tab==='organization'}" aria-controls="ob-panel" data-ob-tab="organization">组织看板</button><button type="button" id="ob-employees-tab" role="tab" aria-selected="${tab==='employees'}" aria-controls="ob-panel" data-ob-tab="employees">员工看板</button></div><div class="ob-period" role="group" aria-label="选择统计周期"><span>统计周期</span><button type="button" data-ob-period="today" aria-pressed="${period==='today'}">模拟今日</button><button type="button" data-ob-period="week" aria-pressed="${period==='week'}">近7天</button></div><section id="ob-panel" role="tabpanel" aria-labelledby="ob-${tab}-tab">${scope.kind==='self'?'<p class="ob-self-notice">当前身份仅有本人指标权限，组织和其他员工的汇总不可见。</p>':crumbs(scope)}<div class="ob-section-title"><h3>${esc(selectedName)}</h3><small>${m.employees} 人 · ${periodLabel()}去重统计</small></div><div class="ob-metrics">${[[periodLabel()+'活跃员工',m.activeEmployees,'选定周期内有活跃的不同员工'],['活跃员工占比',activityRate(m),'选定周期活跃员工 / 范围员工'],['新增项目',m.projects,periodLabel()+'内创建的不同项目'],['不同协作',m.collaborations,periodLabel()+'参与的协作，跨成员去重'],['人类消息',m.humanMessages,periodLabel()+'员工发送的消息数'],['确认共享成果',m.confirmedOutputs,periodLabel()+'经员工确认后共享的成果']].map(([label,value,hint])=>`<article class="ob-metric"><small>${label}</small><strong>${value}</strong><span>${hint}</span></article>`).join('')}</div>${scope.kind==='self'||tab==='employees'?`<section class="ob-section"><div class="ob-section-title"><div><h3>${scope.kind==='self'?'我的员工指标':'范围内员工指标'}</h3><p>活跃天数固定按 7 天计；其余活跃状态和数量按${periodLabel()}统计。</p></div><small>${staff.length} 人</small></div>${employeeTable(staff)}</section>`:organizationTable(scope)}<details class="ob-definitions"><summary>指标口径与可见范围</summary><p>模拟今日为样例第 7 天，近7天为完整样例周。事件 ID 被确定性分配到第 1–7 天；所有数量均按所选周期筛选。活跃员工为周期内至少活跃一天的不同员工；活跃天数 / 7 始终显示完整样例周。新增项目为选定周期内创建的项目 ID 去重数。不同协作：参与的协作 ID 去重数，同一协作不因多名成员参与而重复计数。人类消息：员工发送的消息 ID 去重数，不含 AI 消息。确认共享成果：经员工本人确认后共享的成果 ID 去重数。部门汇总包含下属部门，每名员工只计一次；部门行不可直接相加得到总计。</p><p>高管办公室查看全公司；部门负责人查看其负责部门的并集及下属团队；普通员工只查看本人。此处为单浏览器原型权限演示；数字使用独立静态样例，操作协作或切换身份不会生成真实遥测。</p></details></section></div>`;
+  }
+  const priorRender = render;
+  render = function () {
+    if (view !== 'orgBoard') { priorRender(); navButton.classList.remove('active'); return; }
+    if (location.hash.startsWith('#/knowledge')) history.replaceState(null, '', location.pathname + location.search);
+    ensureActive(); nav(); renderDrawer(); renderBoard();
+    window.BIOS_PRESENCE_UI?.refresh(); window.BIOS_LAYOUT?.apply();
+  };
+  document.addEventListener('click', event => {
+    const button = event.target.closest('button'); if (!button) return;
+    if (button.hasAttribute('data-org-board-entry')) return openBoard();
+    if (view !== 'orgBoard') return;
+    if (button.dataset.obPeriod) { period = button.dataset.obPeriod === 'week' ? 'week' : 'today'; render(); document.querySelector('[data-ob-period="'+period+'"]')?.focus(); }
+    if (button.dataset.obTab) { tab = button.dataset.obTab; render(); document.getElementById('ob-'+tab+'-tab')?.focus(); }
+    if (button.hasAttribute('data-ob-dept')) {
+      const scope = getScope(), id = button.dataset.obDept || null;
+      if (id && !scope.departmentIds.includes(id)) return;
+      selectedDepartment = id; render();
+    }
+  });
+  document.addEventListener('keydown', event => {
+    if (!event.target.matches('[data-ob-tab]') || !['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+    event.preventDefault(); tab = event.key === 'Home' ? 'organization' : event.key === 'End' ? 'employees' : tab === 'organization' ? 'employees' : 'organization';
+    render(); document.getElementById('ob-'+tab+'-tab')?.focus();
+  });
 })();
 
 </script><style>
