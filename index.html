@@ -1910,6 +1910,55 @@ const appBrowserMessages=renderMessages;
 renderMessages=function(){appBrowserMessages();const stream=$('#privateStream');if(!stream)return;const lastUser=[...messages()].reverse().find(m=>m.role==='user');if(lastUser&&/打开.*(?:CRM|客户管理)|(?:CRM|客户管理).*打开/i.test(lastUser.text||'')){const action=document.createElement('div');action.className='application-chat-action';action.innerHTML='<small>页面打开建议 · 本地规则演示</small><p>可以在当前工作区查看 CRM，对话仍会保留。</p><button data-app-launch="crm">打开 CRM 浏览器页签 ↗</button>';action.onclick=applicationClick;stream.append(action);}};
 render();
 
+</script><style>
+.main>.top{box-sizing:border-box;height:calc(76px * var(--conversation-header-scale,1));min-height:0!important;padding-top:calc(12px * var(--conversation-header-scale,1))!important;padding-bottom:calc(12px * var(--conversation-header-scale,1))!important;overflow:hidden;flex-shrink:0}.main #taskContext{max-height:calc(110px * var(--conversation-header-scale,1));min-height:0!important;box-sizing:border-box;overflow:hidden;padding-top:calc(9px * var(--conversation-header-scale,1))!important;padding-bottom:calc(9px * var(--conversation-header-scale,1))!important;margin-top:0!important;margin-bottom:0!important}.conversation-compact .main>.top,.conversation-compact #taskContext{height:0!important;max-height:0!important;padding:0!important;border:0!important;visibility:hidden}.conversation-height-controls{position:relative;display:flex;align-items:center;justify-content:flex-end;gap:8px;height:28px;min-height:28px;flex-shrink:0;border-bottom:1px solid #303030;background:#151515;padding:0 10px}.conversation-height-controls[hidden]{display:none}.conversation-height-controls>div:last-child{display:flex;gap:6px;z-index:1}.conversation-height-controls button{padding:3px 8px!important;font-size:10px!important;border:0;background:#252525;color:#bbb}.conversation-height-controls #conversationHeight{position:absolute;inset:0 190px 0 0;cursor:ns-resize;touch-action:none;display:flex;justify-content:center;align-items:center}.conversation-height-controls #conversationHeight span{width:52px;height:4px;border-radius:4px;background:#666}.conversation-height-controls #conversationHeight:hover span{background:#ddd}.conversation-height-controls #conversationHeight:focus-visible{outline:2px solid #aaa;outline-offset:-3px}.private .composer-wrap{padding:6px 12px 8px!important}.private .composer{padding:7px 9px!important;border-radius:12px!important}.private .composer textarea{min-height:36px!important;height:40px;max-height:100px;padding:3px!important;font-size:13px;resize:vertical}.private .composer .chips:has(>small){display:none}.private .composer .row button{padding:5px 7px!important;font-size:11px!important}.private .composer-wrap>.hint{display:none}.private .pane-head,.shared .pane-head{min-height:40px!important;padding:8px 12px!important}.application-tabs{padding:4px 8px}.application-tabs button{padding:5px 7px}.presence-private-hint{font-size:10px;padding:3px 8px!important}.conversation-focus .main{position:fixed!important;inset:0!important;z-index:16;background:#111}.conversation-focus #content{display:flex!important;flex:1!important;min-height:0!important}.conversation-focus #content>.shared,.conversation-focus #separator,.conversation-focus .mobile-work-tabs{display:none!important}.conversation-focus #content>.private{display:flex!important;flex:1;width:100%!important;height:100%!important;min-height:0}.conversation-focus .private>.pane-head{display:none!important}.conversation-focus .private #privateStream,.conversation-focus .private .composer-wrap{width:100%;max-width:1100px;margin-left:auto;margin-right:auto}.conversation-focus .application-tabs:has(.application-tab){display:flex}.conversation-focus .application-tabs:not(:has(.application-tab)){display:none}.conversation-focus .main #taskContext{display:none!important}#inlineOasisStatus{display:flex;gap:10px;flex-wrap:wrap;font-size:10px;color:#bbb;padding:5px 2px}#inlineOasisStatus[hidden]{display:none}#inlineOasisStatus strong{color:#eee}.oasis-invite[aria-pressed=true]{background:#e4e4e4!important;color:#151515!important}.inline-oasis-share{margin-top:12px}@media(max-width:760px){.main>.top{height:calc(77px * var(--conversation-header-scale,1))}.conversation-height-controls{height:30px;min-height:30px}.private .composer textarea{font-size:16px!important}.private .composer-wrap{padding:5px 8px!important}.conversation-focus .private #privateStream{padding:12px!important}}
+
+.main>.conversation-height-controls{width:100%;min-width:0}.conversation-focus .main>.workspace{flex:1;min-height:0}
+
+</style><script>
+// Presentation controls and inline Oasis routing; no real model invocation.
+(()=>{
+ const app=document.querySelector('.app'),main=document.querySelector('.main');
+ state.conversationLayout??={collapse:0};
+ const modes=new Map();let focused=false,previousLayout=null;
+ const controls=document.createElement('div');controls.className='conversation-height-controls';
+ controls.innerHTML='<div id="conversationHeight" role="separator" tabindex="0" aria-label="上下拖动调整顶部空间" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" title="向上拖收起顶部，向下拖恢复；上下方向键也可调整"><span></span></div><div><button id="collapseConversationTop">收起顶部</button><button id="focusConversation">专注对话</button></div>';
+ function apply(){
+  const active=view==='work';controls.hidden=!active;
+  if(!active){app.classList.remove('conversation-focus','conversation-compact');main.style.removeProperty('--conversation-header-scale');return;}
+  const c=state.conversationLayout.collapse;
+  main.style.setProperty('--conversation-header-scale',String(1-c));app.classList.toggle('conversation-compact',c>.95);app.classList.toggle('conversation-focus',focused);
+  $('#conversationHeight').setAttribute('aria-valuenow',Math.round(c*100));$('#collapseConversationTop').textContent=c>.5?'展开顶部':'收起顶部';$('#focusConversation').textContent=focused?'退出专注':'专注对话';
+ }
+ function resize(n,persist=false){state.conversationLayout.collapse=Math.min(1,Math.max(0,n));apply();if(persist)save();}
+ const handle=controls.querySelector('#conversationHeight');
+ handle.onpointerdown=e=>{e.preventDefault();handle.setPointerCapture(e.pointerId);const y=e.clientY,start=state.conversationLayout.collapse;handle.onpointermove=v=>resize(start+(y-v.clientY)/140);const stop=()=>{handle.onpointermove=null;save();};handle.onpointerup=stop;handle.onpointercancel=stop;};
+ handle.onkeydown=e=>{if(!['ArrowUp','ArrowDown','Home','End'].includes(e.key))return;e.preventDefault();resize(e.key==='Home'?0:e.key==='End'?1:state.conversationLayout.collapse+(e.key==='ArrowUp'?.2:-.2),true);};
+ controls.querySelector('#collapseConversationTop').onclick=()=>resize(state.conversationLayout.collapse>.5?0:1,true);
+ function focusToggle(){focused=!focused;if(focused){previousLayout={collapse:state.conversationLayout.collapse};resize(1);drawer=false;renderDrawer();document.querySelector('[data-mobile-pane="private"]')?.click();if(typeof applicationSession==='function'){applicationSession().active='chat';applicationSession().full=false;mountWorkspaceBrowser();}}else if(previousLayout)resize(previousLayout.collapse);apply();}
+ controls.querySelector('#focusConversation').onclick=focusToggle;
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&focused&&!$('#modal').open)focusToggle();});
+ function updateMode(){const mode=modes.get(key())==='oasis',b=document.querySelector('.oasis-invite');if(b){b.textContent=mode?'✦ Oasis · 返回我的 AI':'✦ 与 Oasis 对话';b.setAttribute('aria-pressed',String(mode));b.onclick=()=>{modes.set(key(),mode?'self':'oasis');updateMode();$('#input')?.focus();};}
+ const input=$('#input');if(input)input.placeholder=mode?'直接向 Oasis 提问或补充判断条件…':'说说你想完成的工作…';
+ let status=$('#inlineOasisStatus');if(!status&&$('#composer')){status=document.createElement('div');status.id='inlineOasisStatus';$('#composer').before(status);}if(status){status.hidden=!mode;status.innerHTML='<strong>✦ Oasis 正在与你对话</strong><span>独立建议 · 仅自己可见 · 不审批、不自动共享</span>';}
+ if($('#send'))$('#send').textContent=mode?'问 Oasis ↑':'发送 ↑';
+ }
+ const previousSend=send;
+ send=function(){if(modes.get(key())!=='oasis')return previousSend();const check=window.BIOS_PRESENCE_UI?.check(project(),{private:true});if(check&&!check.allowed)return toast(check.reason);const input=$('#input'),question=input?.value.trim();if(!question)return;
+ const catalog=caps.map(c=>({id:c.id,name:c.name,available:capabilityAllowed(c.id),description:[c.desc,c.work,c.output,...(c.scenes||[])].filter(Boolean).join(' ')}));
+ const advice=BIOS_OASIS_MODEL.advise({question,scope:'private',catalog});messages().push({role:'user',text:question},{role:'oasis',text:question,advice});state.inputs[key()]='';input.value='';save();renderMessages();updateMode();
+ };
+ const previousMessages=renderMessages;
+ renderMessages=function(){previousMessages();if(view!=='work')return;const advice=messages().filter(m=>m.role==='oasis'&&m.advice);document.querySelectorAll('#privateStream .oasis-card').forEach((card,i)=>{if(!isCollab(project())||!advice[i])return;const b=document.createElement('button');b.textContent='整理为共享草稿';b.className='inline-oasis-share';b.onclick=()=>{const a=advice[i].advice;state.drafts[key()]={text:'Oasis 独立建议（本地模拟）\n问题：'+a.question+'\n建议：'+a.recommendation+'\n待确认：'+a.gaps.join('；'),to:'开放回应'};save();renderMessages();};card.append(b);});};
+ const previousRender=render;
+ render=function(){previousRender();const workspace=document.querySelector('.main>.workspace');if(workspace&&controls.nextSibling!==workspace)workspace.before(controls);apply();if(view!=='work')return;updateMode();if($('#send'))$('#send').onclick=send;};
+ render();
+})();
+
+
 </script></body></html>
+
+
+
 
 
