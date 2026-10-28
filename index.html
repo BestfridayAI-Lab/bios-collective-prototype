@@ -1310,8 +1310,11 @@ window.BIOS_ROLEPLAY=out;
   const base = renderMemory;
   renderMemory = function () {
     if (knowledgeRoute.scope === 'customer') {
-      knowledgeShell(`<div class="knowledge-breadcrumb"><a href="#/knowledge">记忆与经验</a> / 客户资料</div><div class="knowledge-heading"><small>CUSTOMER LIBRARY</small><h2>客户资料</h2><p>${enabled() ? '已启用公司客户资料入口' : '公司尚未启用客户资料'}</p></div><div class="empty"><h3>${enabled() ? '内容结构待定义' : '此入口已关闭'}</h3><p>${enabled() ? '先保留这个独立空间，客户资料的分类、字段和操作将在后续确定。' : '公司负责人可以在记忆与经验总览中开启。'}</p><a href="#/knowledge">返回记忆与经验 →</a></div>`);
-      $('#title').textContent = '客户资料';
+      const experience = knowledgeRoute.kind === 'experience';
+      const title = experience ? '客户与品牌经验' : '客户与品牌记忆';
+      knowledgeShell(`<div class="knowledge-breadcrumb"><a href="#/knowledge">记忆与经验</a> / ${title}</div><div class="knowledge-heading"><small>CUSTOMER & BRAND</small><h2>${title}</h2><p>面向服务商的独立内容库</p></div>${enabled() ? `<div class="knowledge-tabs"><a href="#/knowledge/customer/memory" class="${experience?'':'selected'}">客户与品牌记忆</a><a href="#/knowledge/customer/experience" class="${experience?'selected':''}">客户与品牌经验</a></div>` : ''}<div class="empty"><h3>${enabled() ? '内容结构待定义' : '此入口已关闭'}</h3><p>${enabled() ? '已区分记忆库与经验库；具体分类、字段和内容将在后续定义。' : '公司负责人可以在记忆与经验总览底部开启。'}</p><a href="#/knowledge">返回记忆与经验 →</a></div>`);
+      $('#title').textContent = title;
+      $('#subtitle').textContent = '客户与品牌 · 记忆和经验分别管理';
       return;
     }
     base();
@@ -1320,15 +1323,14 @@ window.BIOS_ROLEPLAY=out;
     if (!page) return;
     const block = document.createElement('section');
     block.className = 'customer-library-setting';
-    block.innerHTML = `<div class="row between"><div><h3>客户资料</h3><p class="scope-hint">可选的公司内容库 · ${enabled() ? '已开启' : '已关闭'}。关闭只隐藏入口，保留设置与已有资料。</p></div><button id="customerLibraryToggle" role="switch" aria-checked="${enabled()}" aria-label="启用客户资料" ${mayConfigure() ? '' : 'disabled'}>${enabled() ? '● 开启' : '○ 关闭'}</button></div>${mayConfigure() ? '' : '<small>由公司负责人配置是否启用。</small>'}${enabled() ? '<a class="knowledge-card customer-library-entry" href="#/knowledge/customer/library"><h3>客户资料 ↗</h3><p>打开独立空间；内容结构待定义。</p><span class="knowledge-open">打开客户资料 →</span></a>' : ''}`;
-    const heading = page.querySelector('.notice');
-    heading ? heading.after(block) : page.append(block);
+    block.innerHTML = `<div class="row between"><div><h3>客户与品牌记忆</h3><p class="scope-hint">面向服务商 · 记忆与经验分别管理。关闭后隐藏两个入口，保留内容。</p></div><button id="customerLibraryToggle" role="switch" aria-checked="${enabled()}" aria-label="启用客户与品牌记忆和经验" ${mayConfigure() ? '' : 'disabled'}>${enabled() ? '● 开' : '○ 关'}</button></div>${mayConfigure() ? '' : '<small>由公司负责人配置是否启用。</small>'}${enabled() ? '<div class="knowledge-grid"><a class="knowledge-card customer-library-entry" href="#/knowledge/customer/memory"><h3>客户与品牌记忆 ↗</h3><p>独立记忆库 · 内容结构待定义。</p><span class="knowledge-open">打开记忆库 →</span></a><a class="knowledge-card customer-library-entry" href="#/knowledge/customer/experience"><h3>客户与品牌经验 ↗</h3><p>独立经验库 · 内容结构待定义。</p><span class="knowledge-open">打开经验库 →</span></a></div>' : ''}`;
+    page.append(block);
     $('#customerLibraryToggle').onclick = () => {
       if (!mayConfigure()) return;
       state.companySettings ??= {};
       state.companySettings.customerLibraryEnabled = !enabled();
       save(); renderMemory();
-      toast(enabled() ? '客户资料入口已开启' : '客户资料入口已隐藏，未删除内容');
+      toast(enabled() ? '客户与品牌记忆、经验入口已开启' : '两个入口已隐藏，未删除内容');
     };
   };
 })();
